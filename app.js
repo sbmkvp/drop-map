@@ -89,7 +89,8 @@ resetViewEl.addEventListener("click", () => {
 });
 
 if (!restorePersistedState()) {
-  loadDefaultLayers();
+  renderLegend();
+  renderLayerList();
 }
 
 ["dragenter", "dragover"].forEach((eventName) => {
@@ -176,42 +177,6 @@ async function loadFiles(files) {
 
   if (addedLayerCount > 0) {
     statusEl.textContent = `Added ${addedLayerCount} layer${addedLayerCount === 1 ? "" : "s"}.`;
-  }
-}
-
-async function loadDefaultLayers() {
-  try {
-    layerRegistry.length = 0;
-    expandedLayerId = null;
-    const defaults = await Promise.all([
-      fetch("./samples/australian-cities.geojson").then((response) =>
-        response.json(),
-      ),
-      fetch("./samples/australian-rivers.geojson").then((response) =>
-        response.json(),
-      ),
-    ]);
-
-    const generatedLayers = defaults.flatMap((geojson, datasetIndex) =>
-      createLayersFromGeoJSON(
-        geojson,
-        datasetIndex === 0
-          ? "australian-cities.geojson"
-          : "australian-rivers.geojson",
-      ).map((layer, index) => ({
-        ...layer,
-        id: `${layer.id}-default-${datasetIndex}-${index}`,
-      })),
-    );
-
-    layerRegistry.push(...generatedLayers);
-    tooltipEl.hidden = true;
-    refreshDeckLayers();
-    fitToAllLayers();
-    scheduleLayerListRender();
-    schedulePersistState();
-  } catch (error) {
-    statusEl.textContent = "";
   }
 }
 
@@ -690,7 +655,6 @@ function resetToDefaults() {
   deckgl.setProps({ initialViewState: currentViewState, layers: [] });
   renderLegend();
   renderLayerList();
-  loadDefaultLayers();
 }
 
 function schedulePersistState() {

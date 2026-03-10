@@ -1,4 +1,15 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("fs");
+const path = require("path");
+
+const citiesGeoJson = fs.readFileSync(
+  path.join(__dirname, "../../samples/australian-cities.geojson"),
+  "utf8",
+);
+const riversGeoJson = fs.readFileSync(
+  path.join(__dirname, "../../samples/australian-rivers.geojson"),
+  "utf8",
+);
 
 function createPersistedLayersState(layerCount) {
   return JSON.stringify({
@@ -136,6 +147,17 @@ async function dropGeoJson(page, { name, text }) {
   );
 }
 
+async function loadBaseLayers(page) {
+  await dropGeoJson(page, {
+    name: "australian-cities.geojson",
+    text: citiesGeoJson,
+  });
+  await dropGeoJson(page, {
+    name: "australian-rivers.geojson",
+    text: riversGeoJson,
+  });
+}
+
 async function reorderLayer(page, fromName, toName) {
   await page.evaluate(
     ({ fromName, toName }) => {
@@ -186,11 +208,12 @@ async function reorderLayer(page, fromName, toName) {
   );
 }
 
-test("loads default cities and rivers and updates style controls", async ({
-  page,
-}) => {
+test("loads cities and rivers and updates style controls", async ({ page }) => {
   await page.goto("/");
 
+  await expect(page.locator(".layer-item")).toHaveCount(0);
+  await expect(page.locator("#legendModal")).toBeHidden();
+  await loadBaseLayers(page);
   await expect(page.locator(".layer-item")).toHaveCount(2);
   await expect(page.locator("#legendModal")).toBeVisible();
   await expect(page.locator(".legend-item")).toHaveCount(2);
@@ -198,7 +221,6 @@ test("loads default cities and rivers and updates style controls", async ({
     "australian-cities.geojson",
     "australian-rivers.geojson",
   ]);
-  await expect(page.locator("#status")).toHaveText("");
 
   const citiesLayer = page.locator(".layer-item").filter({
     hasText: "australian-cities.geojson",
@@ -242,6 +264,7 @@ test("toggles layer visibility, deletes a layer, and adds a new one", async ({
   page,
 }) => {
   await page.goto("/");
+  await loadBaseLayers(page);
   await expect(page.locator(".legend-item")).toHaveCount(2);
 
   const riversLayer = page.locator(".layer-item").filter({
@@ -294,6 +317,7 @@ test("toggles layer visibility, deletes a layer, and adds a new one", async ({
 
 test("reorders layers and toggles dark mode", async ({ page }) => {
   await page.goto("/");
+  await loadBaseLayers(page);
   await expect(page.locator(".layer-item")).toHaveCount(2);
 
   await reorderLayer(
@@ -317,6 +341,7 @@ test("restores persisted layers, styles, visibility, order, and theme after refr
   page,
 }) => {
   await page.goto("/");
+  await loadBaseLayers(page);
 
   const citiesLayer = page.locator(".layer-item").filter({
     hasText: "australian-cities.geojson",
@@ -370,8 +395,9 @@ test("restores persisted layers, styles, visibility, order, and theme after refr
   await expect(restoredRiversLayer.locator(".layer-toggle")).not.toBeChecked();
 });
 
-test("resets back to default layers and theme", async ({ page }) => {
+test("resets to empty layers and default theme", async ({ page }) => {
   await page.goto("/");
+  await loadBaseLayers(page);
 
   const citiesLayer = page.locator(".layer-item").filter({
     hasText: "australian-cities.geojson",
@@ -391,14 +417,8 @@ test("resets back to default layers and theme", async ({ page }) => {
 
   await page.locator("#resetView").click();
 
-  await expect(page.locator(".layer-item")).toHaveCount(2);
-  await expect(page.locator(".layer-name")).toContainText([
-    "australian-cities.geojson",
-    "australian-rivers.geojson",
-  ]);
-  await expect(page.locator(".layer-name")).not.toContainText([
-    "test-polygons.geojson",
-  ]);
+  await expect(page.locator(".layer-item")).toHaveCount(0);
+  await expect(page.locator("#legendModal")).toBeHidden();
   await expect(page.locator("body")).toHaveAttribute("data-theme", "dark");
 });
 
