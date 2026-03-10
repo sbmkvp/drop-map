@@ -8,6 +8,7 @@ const {
 } = GeoJsonUtils;
 
 const dropZone = document.getElementById("dropZone");
+const languageToggleEl = document.getElementById("languageToggle");
 const statusEl = document.getElementById("status");
 const layersListEl = document.getElementById("layersList");
 const legendModalEl = document.getElementById("legendModal");
@@ -15,6 +16,12 @@ const legendListEl = document.getElementById("legendList");
 const resetViewEl = document.getElementById("resetView");
 const themeToggleEl = document.getElementById("themeToggle");
 const tooltipEl = document.getElementById("tooltip");
+const brandSubtitleEl = document.getElementById("brandSubtitle");
+const layersHeadingEl = document.getElementById("layersHeading");
+const dropMessageTitleEl = document.getElementById("dropMessageTitle");
+const dropMessageSubtitleEl = document.getElementById("dropMessageSubtitle");
+const legendHeadingEl = document.getElementById("legendHeading");
+const mapEl = document.getElementById("map");
 
 const layerRegistry = [];
 const MAP_STYLES = {
@@ -23,7 +30,9 @@ const MAP_STYLES = {
 };
 const STORAGE_KEY = "map-dashboard-state";
 const THEME_STORAGE_KEY = "map-dashboard-theme";
+const LANGUAGE_STORAGE_KEY = "map-dashboard-language";
 const DEFAULT_THEME = "dark";
+const DEFAULT_LANGUAGE = "en";
 const DEFAULT_VIEW_STATE = {
   longitude: 134.5,
   latitude: -25.5,
@@ -38,6 +47,8 @@ let layerListRenderToken = null;
 let persistStateToken = null;
 let deckRefreshToken = null;
 let externalDragDepth = 0;
+let currentLanguage =
+  localStorage.getItem(LANGUAGE_STORAGE_KEY) || DEFAULT_LANGUAGE;
 let metrics = {
   layerListRenders: 0,
   legendRenders: 0,
@@ -52,6 +63,73 @@ window.__resetMapDashboardMetrics = () => {
   });
 };
 window.__getMapDashboardMetrics = () => ({ ...metrics });
+
+const I18N = {
+  en: {
+    appTitle: "DropMap",
+    subtitle: "Drag, Drop, Map",
+    layers: "Layers",
+    legend: "Legend",
+    mapAria: "Map",
+    dropTitle: "Drop GeoJSON to load it",
+    dropSubtitle: "The map will style and fit it automatically.",
+    noLayers: "No layers loaded.",
+    noVisibleLayers: "No visible layers.",
+    loadingFiles: ({ count }) =>
+      `Loading ${count} file${count === 1 ? "" : "s"}...`,
+    skippedFile: ({ file }) => `Skipped ${file}: no supported features found.`,
+    couldNotLoad: ({ file, message }) => `Could not load ${file}: ${message}`,
+    addedLayers: ({ count }) =>
+      `Added ${count} layer${count === 1 ? "" : "s"}.`,
+    noProperties: "No properties",
+    featureSuffix: ({ count }) => `feature${count === 1 ? "" : "s"}`,
+    color: "Color",
+    width: "Width",
+    radius: "Radius",
+    points: "points",
+    lines: "lines",
+    polygons: "polygons",
+    dragToReorder: "Drag to reorder",
+    showStyle: "Show style options",
+    hideStyle: "Hide style options",
+    deleteLayer: "Delete layer",
+    switchToDark: "Switch to dark mode",
+    switchToLight: "Switch to light mode",
+    resetDefault: "Reset to default",
+    switchLanguage: "Switch language",
+  },
+  zh: {
+    appTitle: "DropMap",
+    subtitle: "拖放即成图",
+    layers: "图层",
+    legend: "图例",
+    mapAria: "地图",
+    dropTitle: "拖放 GeoJSON 以加载",
+    dropSubtitle: "地图将自动完成样式与视野适配。",
+    noLayers: "暂无图层。",
+    noVisibleLayers: "没有可见图层。",
+    loadingFiles: ({ count }) => `正在加载 ${count} 个文件...`,
+    skippedFile: ({ file }) => `已跳过 ${file}：未找到受支持的要素。`,
+    couldNotLoad: ({ file, message }) => `无法加载 ${file}：${message}`,
+    addedLayers: ({ count }) => `已添加 ${count} 个图层。`,
+    noProperties: "无属性",
+    featureSuffix: () => "个要素",
+    color: "颜色",
+    width: "宽度",
+    radius: "半径",
+    points: "点",
+    lines: "线",
+    polygons: "面",
+    dragToReorder: "拖动以重排",
+    showStyle: "显示样式选项",
+    hideStyle: "隐藏样式选项",
+    deleteLayer: "删除图层",
+    switchToDark: "切换为深色模式",
+    switchToLight: "切换为浅色模式",
+    resetDefault: "重置为默认",
+    switchLanguage: "切换语言",
+  },
+};
 
 const deckgl = new DeckGL({
   container: "map",
@@ -76,7 +154,14 @@ const deckgl = new DeckGL({
 resetViewEl.innerHTML = `<span class="theme-toggle-icon" aria-hidden="true">${resetIcon()}</span>`;
 
 const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME;
+applyLanguage(currentLanguage);
 applyTheme(savedTheme);
+
+languageToggleEl.addEventListener("click", () => {
+  currentLanguage = currentLanguage === "zh" ? "en" : "zh";
+  applyLanguage(currentLanguage);
+  localStorage.setItem(LANGUAGE_STORAGE_KEY, currentLanguage);
+});
 
 themeToggleEl.addEventListener("click", () => {
   const nextTheme = document.body.dataset.theme === "dark" ? "light" : "dark";
@@ -142,7 +227,7 @@ layersListEl.addEventListener("dragleave", handleLayerDragLeave);
 layersListEl.addEventListener("drop", handleLayerDrop);
 
 async function loadFiles(files) {
-  statusEl.textContent = `Loading ${files.length} file${files.length === 1 ? "" : "s"}...`;
+  statusEl.textContent = t("loadingFiles", { count: files.length });
   let addedLayerCount = 0;
 
   for (const file of files) {
@@ -158,14 +243,17 @@ async function loadFiles(files) {
       );
 
       if (generatedLayers.length === 0) {
-        statusEl.textContent = `Skipped ${file.name}: no supported features found.`;
+        statusEl.textContent = t("skippedFile", { file: file.name });
         continue;
       }
 
       layerRegistry.push(...generatedLayers);
       addedLayerCount += generatedLayers.length;
     } catch (error) {
-      statusEl.textContent = `Could not load ${file.name}: ${error.message}`;
+      statusEl.textContent = t("couldNotLoad", {
+        file: file.name,
+        message: error.message,
+      });
     }
   }
 
@@ -176,7 +264,7 @@ async function loadFiles(files) {
   schedulePersistState();
 
   if (addedLayerCount > 0) {
-    statusEl.textContent = `Added ${addedLayerCount} layer${addedLayerCount === 1 ? "" : "s"}.`;
+    statusEl.textContent = t("addedLayers", { count: addedLayerCount });
   }
 }
 
@@ -277,7 +365,7 @@ function renderLegend() {
   legendModalEl.hidden = visibleLayers.length === 0;
 
   if (visibleLayers.length === 0) {
-    legendListEl.innerHTML = '<p class="legend-empty">No visible layers.</p>';
+    legendListEl.innerHTML = `<p class="legend-empty">${escapeHtml(t("noVisibleLayers"))}</p>`;
     return;
   }
 
@@ -304,7 +392,7 @@ function buildTooltipContent(feature) {
   const entries = Object.entries(properties).slice(0, 8);
 
   if (entries.length === 0) {
-    return `<strong>${escapeHtml(feature.geometry?.type || "Feature")}</strong><div>No properties</div>`;
+    return `<strong>${escapeHtml(feature.geometry?.type || "Feature")}</strong><div>${escapeHtml(t("noProperties"))}</div>`;
   }
 
   const rows = entries
@@ -323,7 +411,7 @@ function renderLayerList() {
   metrics.layerListRenders += 1;
 
   if (layerRegistry.length === 0) {
-    layersListEl.innerHTML = '<p class="layers-empty">No layers loaded.</p>';
+    layersListEl.innerHTML = `<p class="layers-empty">${escapeHtml(t("noLayers"))}</p>`;
     return;
   }
 
@@ -331,31 +419,31 @@ function renderLayerList() {
     .map(
       (entry, index) => `
         <div class="layer-item" data-layer-index="${index}">
-          <span class="layer-handle" draggable="true" data-layer-index="${index}" aria-label="Drag to reorder" title="Drag to reorder">⋮⋮</span>
+          <span class="layer-handle" draggable="true" data-layer-index="${index}" aria-label="${escapeHtml(t("dragToReorder"))}" title="${escapeHtml(t("dragToReorder"))}">⋮⋮</span>
           <span class="layer-swatch" style="background: rgb(${entry.style.lineColor.slice(0, 3).join(",")});"></span>
           <span class="layer-copy">
             <span class="layer-topline">
               <span class="layer-name">${escapeHtml(entry.label)}</span>
-              <button class="layer-expand" type="button" data-layer-index="${index}" aria-expanded="${expandedLayerId === entry.id ? "true" : "false"}" aria-label="${expandedLayerId === entry.id ? "Hide style options" : "Show style options"}">${styleToggleIcon(expandedLayerId === entry.id)}</button>
+              <button class="layer-expand" type="button" data-layer-index="${index}" aria-expanded="${expandedLayerId === entry.id ? "true" : "false"}" aria-label="${escapeHtml(expandedLayerId === entry.id ? t("hideStyle") : t("showStyle"))}">${styleToggleIcon(expandedLayerId === entry.id)}</button>
             </span>
-            <span class="layer-meta">${entry.featureCount} feature${entry.featureCount === 1 ? "" : "s"} · ${escapeHtml(entry.geometryLabel)}</span>
+            <span class="layer-meta">${featureCountLabel(entry.featureCount)} · ${escapeHtml(t(entry.geometryLabel))}</span>
           </span>
-          <button class="layer-delete" type="button" data-layer-index="${index}" aria-label="Delete layer">×</button>
+          <button class="layer-delete" type="button" data-layer-index="${index}" aria-label="${escapeHtml(t("deleteLayer"))}">×</button>
           <input class="layer-toggle" type="checkbox" data-layer-index="${index}" ${entry.visible ? "checked" : ""} />
           <div class="layer-controls" ${expandedLayerId === entry.id ? "" : "hidden"}>
             <div class="layer-control">
-              <label for="line-color-${index}">Color</label>
+              <label for="line-color-${index}">${escapeHtml(t("color"))}</label>
               <input id="line-color-${index}" class="layer-style-input" type="color" data-style-key="lineColor" data-layer-index="${index}" value="${rgbToHex(entry.style.lineColor)}" />
             </div>
             <div class="layer-control">
-              <label for="line-width-${index}">Width</label>
+              <label for="line-width-${index}">${escapeHtml(t("width"))}</label>
               <input id="line-width-${index}" class="layer-style-input" type="range" min="1" max="12" step="1" data-style-key="lineWidth" data-layer-index="${index}" value="${entry.style.lineWidth}" />
             </div>
             ${
               entry.geometryLabel === "points"
                 ? `
               <div class="layer-control">
-                <label for="point-radius-${index}">Radius</label>
+                <label for="point-radius-${index}">${escapeHtml(t("radius"))}</label>
                 <input id="point-radius-${index}" class="layer-style-input" type="range" min="2" max="24" step="1" data-style-key="pointRadius" data-layer-index="${index}" value="${entry.style.pointRadius}" />
               </div>
             `
@@ -639,8 +727,26 @@ function applyTheme(theme) {
   themeToggleEl.innerHTML = `<span class="theme-toggle-icon" aria-hidden="true">${theme === "dark" ? sunIcon() : moonIcon()}</span>`;
   themeToggleEl.setAttribute(
     "aria-label",
-    `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
+    theme === "dark" ? t("switchToLight") : t("switchToDark"),
   );
+}
+
+function applyLanguage(language) {
+  currentLanguage = I18N[language] ? language : DEFAULT_LANGUAGE;
+  document.documentElement.lang = currentLanguage === "zh" ? "zh-CN" : "en";
+  document.title = t("appTitle");
+  brandSubtitleEl.textContent = t("subtitle");
+  layersHeadingEl.textContent = t("layers");
+  legendHeadingEl.textContent = t("legend");
+  dropMessageTitleEl.textContent = t("dropTitle");
+  dropMessageSubtitleEl.textContent = t("dropSubtitle");
+  mapEl.setAttribute("aria-label", t("mapAria"));
+  resetViewEl.setAttribute("aria-label", t("resetDefault"));
+  languageToggleEl.textContent = currentLanguage === "zh" ? "中文" : "EN";
+  languageToggleEl.setAttribute("aria-label", t("switchLanguage"));
+  applyTheme(document.body.dataset.theme || savedTheme);
+  renderLegend();
+  renderLayerList();
 }
 
 function resetToDefaults() {
@@ -723,6 +829,19 @@ function restorePersistedState() {
   } catch (_error) {
     return false;
   }
+}
+
+function featureCountLabel(count) {
+  return `${count} ${t("featureSuffix", { count })}`;
+}
+
+function t(key, params = {}) {
+  const bundle = I18N[currentLanguage] || I18N[DEFAULT_LANGUAGE];
+  const value = bundle[key];
+  if (typeof value === "function") {
+    return value(params);
+  }
+  return value || key;
 }
 
 function styleToggleIcon(isExpanded) {

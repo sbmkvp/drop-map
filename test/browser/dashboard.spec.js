@@ -260,6 +260,26 @@ test("loads cities and rivers and updates style controls", async ({ page }) => {
   await expect(page.locator(".legend-description")).toHaveCount(0);
 });
 
+test("switches UI language to Mandarin and persists after reload", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await expect(page.locator("#layersHeading")).toHaveText("Layers");
+  await page.locator("#languageToggle").click();
+
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
+  await expect(page.locator("#layersHeading")).toHaveText("图层");
+  await expect(page.locator("#legendHeading")).toHaveText("图例");
+  await expect(page.locator("#dropMessageTitle")).toHaveText(
+    "拖放 GeoJSON 以加载",
+  );
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
+  await expect(page.locator("#layersHeading")).toHaveText("图层");
+});
+
 test("toggles layer visibility, deletes a layer, and adds a new one", async ({
   page,
 }) => {
