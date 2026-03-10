@@ -1,0 +1,11 @@
+{
+  "name": "map-dashboard",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

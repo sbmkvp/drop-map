@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>DropMap</title>
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+        />
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <div class="shell">
+            <div class="top-controls">
+                <button
+                    id="resetView"
+                    class="theme-toggle"
+                    type="button"
+                    aria-label="Reset to default"
+                >
+                    <span class="theme-toggle-icon" aria-hidden="true"></span>
+                </button>
+                <button
+                    id="themeToggle"
+                    class="theme-toggle"
+                    type="button"
+                    aria-label="Switch to dark mode"
+                >
+                    <span class="theme-toggle-icon" aria-hidden="true"></span>
+                </button>
+            </div>
+            <aside class="sidebar">
+                <div class="brand">
+                    <div class="brand-mark" aria-hidden="true">
+                        <svg viewBox="0 0 32 32" fill="none">
+                            <path
+                                d="M5 11.8 16 6l11 5.8L16 17.6 5 11.8Z"
+                                fill="currentColor"
+                                opacity="0.92"
+                            />
+                            <path
+                                d="M7 17.3 16 12.6l9 4.7-9 4.7-9-4.7Z"
+                                fill="currentColor"
+                                opacity="0.72"
+                            />
+                            <path
+                                d="M9 22.6 16 19l7 3.6-7 3.6-7-3.6Z"
+                                fill="currentColor"
+                                opacity="0.52"
+                            />
+                        </svg>
+                    </div>
+                    <div class="brand-copy">
+                        <h1 class="brand-title">DropMap</h1>
+                        <p class="brand-subtitle">Drag, Drop, Map</p>
+                    </div>
+                </div>
+                <div class="panel panel-floating">
+                    <div class="panel-head">
+                        <p class="eyebrow">Layers</p>
+                        <div id="status" class="status"></div>
+                    </div>
+                    <div id="layersList" class="layers-list">
+                        <p class="layers-empty">No layers loaded.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="map-wrap">
+                <div id="dropZone" class="drop-zone">
+                    <div class="drop-message">
+                        <strong>Drop GeoJSON to load it</strong>
+                        <span
+                            >The map will style and fit it automatically.</span
+                        >
+                    </div>
+                </div>
+                <div id="map" aria-label="Map"></div>
+                <section
+                    id="legendModal"
+                    class="legend-modal panel"
+                    aria-label="Map legend"
+                    hidden
+                >
+                    <div class="legend-head">
+                        <p class="eyebrow">Legend</p>
+                    </div>
+                    <div id="legendList" class="legend-list"></div>
+                </section>
+                <div id="tooltip" class="tooltip" hidden></div>
+            </main>
+        </div>
+
+        <script
+            src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://unpkg.com/deck.gl@^9.2.0/dist.min.js"
+            crossorigin="anonymous"
+        ></script>
+        <script src="./geojson-utils.js"></script>
+        <script src="./app.js"></script>
+    </body>
+</html>
