@@ -605,29 +605,38 @@ h2 {
 .popup-table {
     border-collapse: collapse;
     width: 100%;
+    font-size: 0.68rem;
 }
 
 .popup-table td {
-    padding: 4px 0;
+    padding: 2px 0;
     vertical-align: top;
 }
 
 .popup-table td:first-child {
     color: var(--muted);
-    padding-right: 12px;
+    padding-right: 8px;
 }
 
 .tooltip {
     position: absolute;
-    max-width: 320px;
-    padding: 12px 14px;
+    max-width: 240px;
+    padding: 8px 10px;
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: 4px;
     background: var(--panel-strong);
     box-shadow: var(--shadow);
     color: var(--ink);
+    font-size: 0.72rem;
+    line-height: 1.35;
     pointer-events: none;
     z-index: 1001;
+}
+
+.tooltip strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.72rem;
 }
 
 @media (max-width: 900px) {
