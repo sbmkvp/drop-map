@@ -18,14 +18,35 @@
     <body>
         <div class="shell">
             <div class="top-controls">
-                <button
+                <div
                     id="languageToggle"
-                    class="theme-toggle language-toggle"
-                    type="button"
+                    class="language-switch"
+                    role="group"
                     aria-label="Switch language"
                 >
-                    EN
-                </button>
+                    <span class="language-indicator" aria-hidden="true"></span>
+                    <button
+                        class="language-option"
+                        type="button"
+                        data-language="en"
+                    >
+                        EN
+                    </button>
+                    <button
+                        class="language-option"
+                        type="button"
+                        data-language="zh"
+                    >
+                        中文
+                    </button>
+                    <button
+                        class="language-option"
+                        type="button"
+                        data-language="es"
+                    >
+                        ES
+                    </button>
+                </div>
                 <button
                     id="resetView"
                     class="theme-toggle"

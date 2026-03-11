@@ -76,6 +76,7 @@ test.beforeEach(async ({ page }) => {
     if (!sessionStorage.getItem("playwright-storage-cleared")) {
       localStorage.removeItem("map-dashboard-state");
       localStorage.removeItem("map-dashboard-theme");
+      localStorage.removeItem("map-dashboard-language");
       sessionStorage.setItem("playwright-storage-cleared", "true");
     }
   });
@@ -266,7 +267,7 @@ test("switches UI language to Mandarin and persists after reload", async ({
   await page.goto("/");
 
   await expect(page.locator("#layersHeading")).toHaveText("Layers");
-  await page.locator("#languageToggle").click();
+  await page.locator('[data-language="zh"]').click();
 
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await expect(page.locator("#layersHeading")).toHaveText("图层");
@@ -274,10 +275,38 @@ test("switches UI language to Mandarin and persists after reload", async ({
   await expect(page.locator("#dropMessageTitle")).toHaveText(
     "拖放 GeoJSON 以加载",
   );
+  await expect(page.locator('[data-language="zh"]')).toHaveAttribute(
+    "data-active",
+    "true",
+  );
 
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await expect(page.locator("#layersHeading")).toHaveText("图层");
+});
+
+test("switches UI language to Spanish and persists after reload", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await expect(page.locator("#layersHeading")).toHaveText("Layers");
+  await page.locator('[data-language="es"]').click();
+
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(page.locator("#layersHeading")).toHaveText("Capas");
+  await expect(page.locator("#legendHeading")).toHaveText("Leyenda");
+  await expect(page.locator("#dropMessageTitle")).toHaveText(
+    "Suelta un GeoJSON para cargarlo",
+  );
+  await expect(page.locator('[data-language="es"]')).toHaveAttribute(
+    "data-active",
+    "true",
+  );
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(page.locator("#layersHeading")).toHaveText("Capas");
 });
 
 test("toggles layer visibility, deletes a layer, and adds a new one", async ({

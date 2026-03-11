@@ -88,10 +88,64 @@ body {
     place-items: center;
 }
 
-.language-toggle {
+.language-switch {
+    --language-index: 0;
+    display: grid;
+    position: relative;
+    grid-template-columns: repeat(3, 42px);
+    padding: 2px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel-strong);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(18px);
+}
+
+.language-indicator {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 42px;
+    height: 36px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    transform: translate3d(calc(var(--language-index) * 42px), 0, 0);
+    transition:
+        transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 180ms ease,
+        opacity 180ms ease;
+    will-change: transform;
+    pointer-events: none;
+}
+
+.language-option {
+    position: relative;
+    z-index: 1;
+    width: 42px;
+    height: 36px;
+    border: 0;
+    border-radius: 8px;
+    padding: 0;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
     font-size: 0.62rem;
-    letter-spacing: 0.08em;
     font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition:
+        color 180ms ease,
+        transform 180ms ease,
+        opacity 180ms ease;
+}
+
+.language-option[data-active="true"] {
+    color: var(--ink);
+    transform: translateY(-0.5px);
+}
+
+.language-option:hover {
+    color: var(--ink);
 }
 
 .theme-toggle-icon {

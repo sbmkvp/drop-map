@@ -9,6 +9,9 @@ const {
 
 const dropZone = document.getElementById("dropZone");
 const languageToggleEl = document.getElementById("languageToggle");
+const languageOptionEls = Array.from(
+  languageToggleEl.querySelectorAll(".language-option"),
+);
 const statusEl = document.getElementById("status");
 const layersListEl = document.getElementById("layersList");
 const legendModalEl = document.getElementById("legendModal");
@@ -33,6 +36,11 @@ const THEME_STORAGE_KEY = "map-dashboard-theme";
 const LANGUAGE_STORAGE_KEY = "map-dashboard-language";
 const DEFAULT_THEME = "dark";
 const DEFAULT_LANGUAGE = "en";
+const LANGUAGE_META = {
+  en: { documentLang: "en", index: 0 },
+  zh: { documentLang: "zh-CN", index: 1 },
+  es: { documentLang: "es", index: 2 },
+};
 const DEFAULT_VIEW_STATE = {
   longitude: 134.5,
   latitude: -25.5,
@@ -129,6 +137,41 @@ const I18N = {
     resetDefault: "重置为默认",
     switchLanguage: "切换语言",
   },
+  es: {
+    appTitle: "DropMap",
+    subtitle: "Arrastra, suelta y mapea",
+    layers: "Capas",
+    legend: "Leyenda",
+    mapAria: "Mapa",
+    dropTitle: "Suelta un GeoJSON para cargarlo",
+    dropSubtitle: "El mapa aplicara estilo y ajuste automaticamente.",
+    noLayers: "No hay capas cargadas.",
+    noVisibleLayers: "No hay capas visibles.",
+    loadingFiles: ({ count }) =>
+      `Cargando ${count} archivo${count === 1 ? "" : "s"}...`,
+    skippedFile: ({ file }) =>
+      `Se omitio ${file}: no se encontraron entidades compatibles.`,
+    couldNotLoad: ({ file, message }) =>
+      `No se pudo cargar ${file}: ${message}`,
+    addedLayers: ({ count }) =>
+      `Se agregaron ${count} capa${count === 1 ? "" : "s"}.`,
+    noProperties: "Sin propiedades",
+    featureSuffix: ({ count }) => `elemento${count === 1 ? "" : "s"}`,
+    color: "Color",
+    width: "Ancho",
+    radius: "Radio",
+    points: "puntos",
+    lines: "lineas",
+    polygons: "poligonos",
+    dragToReorder: "Arrastra para reordenar",
+    showStyle: "Mostrar opciones de estilo",
+    hideStyle: "Ocultar opciones de estilo",
+    deleteLayer: "Eliminar capa",
+    switchToDark: "Cambiar a modo oscuro",
+    switchToLight: "Cambiar a modo claro",
+    resetDefault: "Restablecer valores predeterminados",
+    switchLanguage: "Cambiar idioma",
+  },
 };
 
 const deckgl = new DeckGL({
@@ -157,8 +200,13 @@ const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME;
 applyLanguage(currentLanguage);
 applyTheme(savedTheme);
 
-languageToggleEl.addEventListener("click", () => {
-  currentLanguage = currentLanguage === "zh" ? "en" : "zh";
+languageToggleEl.addEventListener("click", (event) => {
+  const option = event.target.closest(".language-option");
+  if (!option) {
+    return;
+  }
+
+  currentLanguage = option.dataset.language;
   applyLanguage(currentLanguage);
   localStorage.setItem(LANGUAGE_STORAGE_KEY, currentLanguage);
 });
@@ -733,7 +781,8 @@ function applyTheme(theme) {
 
 function applyLanguage(language) {
   currentLanguage = I18N[language] ? language : DEFAULT_LANGUAGE;
-  document.documentElement.lang = currentLanguage === "zh" ? "zh-CN" : "en";
+  const languageMeta = LANGUAGE_META[currentLanguage] || LANGUAGE_META.en;
+  document.documentElement.lang = languageMeta.documentLang;
   document.title = t("appTitle");
   brandSubtitleEl.textContent = t("subtitle");
   layersHeadingEl.textContent = t("layers");
@@ -742,8 +791,16 @@ function applyLanguage(language) {
   dropMessageSubtitleEl.textContent = t("dropSubtitle");
   mapEl.setAttribute("aria-label", t("mapAria"));
   resetViewEl.setAttribute("aria-label", t("resetDefault"));
-  languageToggleEl.textContent = currentLanguage === "zh" ? "中文" : "EN";
   languageToggleEl.setAttribute("aria-label", t("switchLanguage"));
+  languageToggleEl.style.setProperty(
+    "--language-index",
+    String(languageMeta.index ?? 0),
+  );
+  languageOptionEls.forEach((optionEl) => {
+    const isActive = optionEl.dataset.language === currentLanguage;
+    optionEl.dataset.active = isActive ? "true" : "false";
+    optionEl.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
   applyTheme(document.body.dataset.theme || savedTheme);
   renderLegend();
   renderLayerList();
