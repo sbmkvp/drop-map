@@ -9,6 +9,9 @@ const {
 
 const dropZone = document.getElementById("dropZone");
 const languageToggleEl = document.getElementById("languageToggle");
+const languageIndicatorEl = languageToggleEl.querySelector(
+  ".language-indicator",
+);
 const languageOptionEls = Array.from(
   languageToggleEl.querySelectorAll(".language-option"),
 );
@@ -37,9 +40,10 @@ const LANGUAGE_STORAGE_KEY = "map-dashboard-language";
 const DEFAULT_THEME = "dark";
 const DEFAULT_LANGUAGE = "en";
 const LANGUAGE_META = {
-  en: { documentLang: "en", index: 0 },
-  zh: { documentLang: "zh-CN", index: 1 },
-  es: { documentLang: "es", index: 2 },
+  en: { documentLang: "en" },
+  zh: { documentLang: "zh-CN" },
+  es: { documentLang: "es" },
+  hi: { documentLang: "hi" },
 };
 const DEFAULT_VIEW_STATE = {
   longitude: 134.5,
@@ -172,6 +176,39 @@ const I18N = {
     resetDefault: "Restablecer valores predeterminados",
     switchLanguage: "Cambiar idioma",
   },
+  hi: {
+    appTitle: "DropMap",
+    subtitle: "खींचें, छोड़ें, मानचित्र बनाएं",
+    layers: "लेयर",
+    legend: "लीजेंड",
+    mapAria: "मानचित्र",
+    dropTitle: "लोड करने के लिए GeoJSON छोड़ें",
+    dropSubtitle: "मानचित्र अपने आप स्टाइल करेगा और दृश्य फिट करेगा।",
+    noLayers: "कोई लेयर लोड नहीं हुई।",
+    noVisibleLayers: "कोई दृश्य लेयर नहीं है।",
+    loadingFiles: ({ count }) =>
+      `${count} फ़ाइल${count === 1 ? "" : "ें"} लोड हो रही हैं...`,
+    skippedFile: ({ file }) => `${file} छोड़ी गई: कोई समर्थित फीचर नहीं मिला।`,
+    couldNotLoad: ({ file, message }) => `${file} लोड नहीं हो सकी: ${message}`,
+    addedLayers: ({ count }) =>
+      `${count} लेयर${count === 1 ? "" : "ें"} जोड़ी गईं।`,
+    noProperties: "कोई प्रॉपर्टी नहीं",
+    featureSuffix: () => "फीचर",
+    color: "रंग",
+    width: "चौड़ाई",
+    radius: "त्रिज्या",
+    points: "बिंदु",
+    lines: "रेखाएं",
+    polygons: "बहुभुज",
+    dragToReorder: "पुन:क्रमित करने के लिए खींचें",
+    showStyle: "स्टाइल विकल्प दिखाएं",
+    hideStyle: "स्टाइल विकल्प छिपाएं",
+    deleteLayer: "लेयर हटाएं",
+    switchToDark: "डार्क मोड पर जाएं",
+    switchToLight: "लाइट मोड पर जाएं",
+    resetDefault: "डिफ़ॉल्ट पर रीसेट करें",
+    switchLanguage: "भाषा बदलें",
+  },
 };
 
 const deckgl = new DeckGL({
@@ -220,6 +257,8 @@ themeToggleEl.addEventListener("click", () => {
 resetViewEl.addEventListener("click", () => {
   resetToDefaults();
 });
+
+window.addEventListener("resize", syncLanguageIndicator);
 
 if (!restorePersistedState()) {
   renderLegend();
@@ -792,18 +831,37 @@ function applyLanguage(language) {
   mapEl.setAttribute("aria-label", t("mapAria"));
   resetViewEl.setAttribute("aria-label", t("resetDefault"));
   languageToggleEl.setAttribute("aria-label", t("switchLanguage"));
-  languageToggleEl.style.setProperty(
-    "--language-index",
-    String(languageMeta.index ?? 0),
-  );
   languageOptionEls.forEach((optionEl) => {
     const isActive = optionEl.dataset.language === currentLanguage;
     optionEl.dataset.active = isActive ? "true" : "false";
     optionEl.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
+  syncLanguageIndicator();
   applyTheme(document.body.dataset.theme || savedTheme);
   renderLegend();
   renderLayerList();
+}
+
+function syncLanguageIndicator() {
+  if (!languageIndicatorEl) {
+    return;
+  }
+
+  const activeOption =
+    languageToggleEl.querySelector('.language-option[data-active="true"]') ||
+    languageOptionEls[0];
+  if (!activeOption) {
+    return;
+  }
+
+  languageToggleEl.style.setProperty(
+    "--language-offset",
+    `${activeOption.offsetLeft}px`,
+  );
+  languageToggleEl.style.setProperty(
+    "--language-width",
+    `${activeOption.offsetWidth}px`,
+  );
 }
 
 function resetToDefaults() {

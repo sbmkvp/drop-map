@@ -309,6 +309,30 @@ test("switches UI language to Spanish and persists after reload", async ({
   await expect(page.locator("#layersHeading")).toHaveText("Capas");
 });
 
+test("switches UI language to Hindi and persists after reload", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await expect(page.locator("#layersHeading")).toHaveText("Layers");
+  await page.locator('[data-language="hi"]').click();
+
+  await expect(page.locator("html")).toHaveAttribute("lang", "hi");
+  await expect(page.locator("#layersHeading")).toHaveText("लेयर");
+  await expect(page.locator("#legendHeading")).toHaveText("लीजेंड");
+  await expect(page.locator("#dropMessageTitle")).toHaveText(
+    "लोड करने के लिए GeoJSON छोड़ें",
+  );
+  await expect(page.locator('[data-language="hi"]')).toHaveAttribute(
+    "data-active",
+    "true",
+  );
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "hi");
+  await expect(page.locator("#layersHeading")).toHaveText("लेयर");
+});
+
 test("toggles layer visibility, deletes a layer, and adds a new one", async ({
   page,
 }) => {
