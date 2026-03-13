@@ -12,6 +12,9 @@
     --shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.08);
     --danger-bg: rgba(255, 241, 238, 0.92);
     --danger-ink: #a33a2a;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --mobile-controls-top: 148px;
 }
 
 body[data-theme="dark"] {
@@ -659,19 +662,161 @@ h2 {
     }
 
     .sidebar {
-        top: 12px;
+        top: max(12px, env(safe-area-inset-top));
         left: 12px;
         width: min(320px, calc(100vw - 24px));
     }
 
     .top-controls {
-        top: 12px;
+        top: max(12px, env(safe-area-inset-top));
         right: 12px;
     }
 
     .legend-modal {
         right: 12px;
-        bottom: 12px;
+        bottom: max(12px, env(safe-area-inset-bottom));
         width: min(320px, calc(100vw - 24px));
+    }
+}
+
+@media (max-width: 640px) {
+    .sidebar {
+        top: max(10px, var(--safe-area-top));
+        left: 10px;
+        right: 10px;
+        width: auto;
+    }
+
+    .brand {
+        margin-bottom: 6px;
+        padding: 7px 9px;
+    }
+
+    .brand-title {
+        font-size: 1.02rem;
+    }
+
+    .brand-subtitle {
+        font-size: 0.58rem;
+        letter-spacing: 0.04em;
+    }
+
+    .panel {
+        padding: 8px;
+    }
+
+    .panel-floating {
+        max-height: min(42dvh, 320px);
+    }
+
+    .top-controls {
+        top: var(--mobile-controls-top);
+        right: 10px;
+        gap: 4px;
+        left: 10px;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        max-width: none;
+    }
+
+    .theme-toggle {
+        width: 36px;
+        height: 36px;
+    }
+
+    .theme-toggle-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .language-switch {
+        max-width: calc(100vw - 104px);
+        overflow-x: auto;
+        scrollbar-width: none;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .language-switch::-webkit-scrollbar {
+        display: none;
+    }
+
+    .language-option {
+        min-width: 40px;
+        height: 32px;
+        padding: 0 8px;
+        font-size: 0.64rem;
+    }
+
+    .language-indicator {
+        height: 32px;
+    }
+
+    .legend-modal {
+        left: 10px;
+        right: 10px;
+        bottom: max(10px, env(safe-area-inset-bottom));
+        width: auto;
+        padding: 8px;
+    }
+
+    .legend-list {
+        gap: 3px;
+    }
+
+    .legend-title {
+        font-size: 0.74rem;
+    }
+
+    .layer-item {
+        grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+        gap: 5px;
+        padding: 6px 7px;
+    }
+
+    .layer-handle,
+    .layer-delete,
+    .layer-expand,
+    .layer-toggle {
+        margin-top: 1px;
+    }
+
+    .layer-name {
+        font-size: 0.78rem;
+    }
+
+    .layer-meta {
+        font-size: 0.66rem;
+    }
+
+    .layer-controls {
+        flex-wrap: wrap;
+        grid-column: 1 / -1;
+        gap: 6px;
+    }
+
+    .layer-control {
+        flex: 1 1 calc(50% - 6px);
+        min-width: 96px;
+        justify-content: space-between;
+    }
+
+    .layer-control input[type="range"] {
+        width: 56px;
+    }
+
+    .drop-zone {
+        inset: 12px;
+        border-radius: 16px;
+    }
+
+    .drop-message {
+        gap: 6px;
+        padding: 18px;
+        font-size: 0.8rem;
+    }
+
+    .tooltip {
+        max-width: min(220px, calc(100vw - 24px));
     }
 }

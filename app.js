@@ -19,6 +19,7 @@ const statusEl = document.getElementById("status");
 const layersListEl = document.getElementById("layersList");
 const legendModalEl = document.getElementById("legendModal");
 const legendListEl = document.getElementById("legendList");
+const sidebarEl = document.querySelector(".sidebar");
 const resetViewEl = document.getElementById("resetView");
 const themeToggleEl = document.getElementById("themeToggle");
 const tooltipEl = document.getElementById("tooltip");
@@ -258,7 +259,10 @@ resetViewEl.addEventListener("click", () => {
   resetToDefaults();
 });
 
-window.addEventListener("resize", syncLanguageIndicator);
+window.addEventListener("resize", () => {
+  syncLanguageIndicator();
+  syncMobileControlOffset();
+});
 
 if (!restorePersistedState()) {
   renderLegend();
@@ -540,6 +544,7 @@ function renderLayerList() {
         </div>`,
     )
     .join("");
+  syncMobileControlOffset();
 }
 
 function scheduleLayerListRender() {
@@ -837,6 +842,7 @@ function applyLanguage(language) {
     optionEl.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
   syncLanguageIndicator();
+  syncMobileControlOffset();
   applyTheme(document.body.dataset.theme || savedTheme);
   renderLegend();
   renderLayerList();
@@ -861,6 +867,29 @@ function syncLanguageIndicator() {
   languageToggleEl.style.setProperty(
     "--language-width",
     `${activeOption.offsetWidth}px`,
+  );
+}
+
+function syncMobileControlOffset() {
+  if (!sidebarEl) {
+    return;
+  }
+
+  if (window.innerWidth > 640) {
+    document.documentElement.style.removeProperty("--mobile-controls-top");
+    return;
+  }
+
+  const safeTop = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(
+      "--safe-area-top",
+    ),
+  );
+  const sidebarBottom = sidebarEl.getBoundingClientRect().bottom;
+  const topOffset = Math.max(sidebarBottom + 8, safeTop + 10);
+  document.documentElement.style.setProperty(
+    "--mobile-controls-top",
+    `${Math.ceil(topOffset)}px`,
   );
 }
 
@@ -940,6 +969,7 @@ function restorePersistedState() {
     expandedLayerId = parsed.expandedLayerId ?? null;
     refreshDeckLayers();
     renderLayerList();
+    syncMobileControlOffset();
     return true;
   } catch (_error) {
     return false;

@@ -209,6 +209,52 @@ async function reorderLayer(page, fromName, toName) {
   );
 }
 
+test("keeps controls and panels usable on a mobile viewport", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await loadBaseLayers(page);
+
+  await expect(page.locator(".sidebar")).toBeVisible();
+  await expect(page.locator(".top-controls")).toBeVisible();
+  await expect(page.locator("#legendModal")).toBeVisible();
+
+  const mobileMetrics = await page.evaluate(() => {
+    const sidebar = document.querySelector(".sidebar")?.getBoundingClientRect();
+    const controls = document
+      .querySelector(".top-controls")
+      ?.getBoundingClientRect();
+    const legend = document
+      .querySelector("#legendModal")
+      ?.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    return {
+      viewportWidth,
+      viewportHeight,
+      sidebarBottom: sidebar?.bottom ?? 0,
+      sidebarRightGap: viewportWidth - (sidebar?.right ?? 0),
+      controlsTop: controls?.top ?? 0,
+      controlsLeft: controls?.left ?? 0,
+      controlsRightGap: viewportWidth - (controls?.right ?? 0),
+      legendBottomGap: viewportHeight - (legend?.bottom ?? 0),
+      legendLeft: legend?.left ?? 0,
+      bodyOverflow: getComputedStyle(document.body).overflow,
+    };
+  });
+
+  expect(mobileMetrics.sidebarRightGap).toBeGreaterThanOrEqual(0);
+  expect(mobileMetrics.controlsTop).toBeGreaterThanOrEqual(
+    mobileMetrics.sidebarBottom,
+  );
+  expect(mobileMetrics.controlsLeft).toBeGreaterThanOrEqual(0);
+  expect(mobileMetrics.controlsRightGap).toBeGreaterThanOrEqual(0);
+  expect(mobileMetrics.legendLeft).toBeGreaterThanOrEqual(0);
+  expect(mobileMetrics.legendBottomGap).toBeGreaterThanOrEqual(0);
+  expect(mobileMetrics.bodyOverflow).toBe("hidden");
+});
+
 test("loads cities and rivers and updates style controls", async ({ page }) => {
   await page.goto("/");
 
