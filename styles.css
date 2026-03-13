@@ -38,8 +38,10 @@ html,
 body {
     margin: 0;
     height: 100%;
+    min-height: 100dvh;
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
     color: var(--ink);
+    background-color: var(--bg);
     background:
         radial-gradient(
             circle at top right,
@@ -56,11 +58,14 @@ body {
 
 body {
     min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
 }
 
 .shell {
     position: relative;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 .top-controls {
@@ -566,7 +571,9 @@ h2 {
 .map-wrap {
     position: relative;
     height: 100vh;
+    height: 100dvh;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 #map {
@@ -648,6 +655,7 @@ h2 {
 @media (max-width: 900px) {
     .map-wrap {
         min-height: 100vh;
+        min-height: 100dvh;
     }
 
     .sidebar {
